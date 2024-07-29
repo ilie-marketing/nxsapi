@@ -1,71 +1,32 @@
-const { createServer } = require('node:http');
+// Import the required modules
+const express = require('express');
 const axios = require('axios');
-const https = require('node:https');
 
-const hostname = '127.0.0.1'; // Localhost is fine for this setup
-const port = process.env.PORT || 3000; // Port is usually set by the hosting environment
+// Create an instance of an Express app
+const app = express();
+const port = 3000; // Port to listen on
 
-// Create an HTTPS agent that allows self-signed certificates
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false // Allow self-signed certificates
-});
+// Define the route to handle incoming requests
+app.get('/', async (req, res) => {
+  try {
+    // Make a GET request to the specified API with custom headers
+    const response = await axios.get('http://80.96.41.152:55301/api', {
+      headers: {
+        'Host': '80.96.41.152'
+      }
+    });
 
-const server = createServer(async (req, res) => {
-  // Log request information for debugging
-  console.log(`Received request: ${req.method} ${req.url}`);
-
-  if (req.method === 'GET' && req.url === '/apps/ndjs28') {
-    try {
-      // URL to make GET request to
-      const url = 'https://80.96.41.152:55301/api'; // Make sure the URL is correct
-
-      // Make GET request using axios with custom headers and HTTPS agent
-      const response = await axios.get(url, {
-        headers: {
-          'Host': '80.96.41.152' // Custom Host header
-        },
-        httpsAgent // Use the custom HTTPS agent
-      });
-
-      // Send the result to the browser
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'text/html');
-      res.end(`
-        <html>
-          <body>
-            <h1>GET Request Result</h1>
-            <pre>${JSON.stringify(response.data, null, 2)}</pre>
-          </body>
-        </html>
-      `);
-    } catch (error) {
-      // Handle error
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/html');
-      res.end(`
-        <html>
-          <body>
-            <h1>Error</h1>
-            <pre>${error.message}</pre>
-          </body>
-        </html>
-      `);
-    }
-  } else {
-    // Handle other routes
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/html');
-    res.end(`
-      <html>
-        <body>
-          <h1>404 Not Found</h1>
-          <p>The page you are looking for does not exist.</p>
-        </body>
-      </html>
-    `);
+    // Log the result and send it in the response
+    console.log('API Response:', response.data);
+    res.send(response.data);
+  } catch (error) {
+    // Handle errors
+    console.error('Error making API request:', error.message);
+    res.status(500).send('Error making API request');
   }
 });
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
